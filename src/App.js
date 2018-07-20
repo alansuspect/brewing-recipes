@@ -1,8 +1,12 @@
 import React, { Component } from 'react';
-import './App.css';
+import Sidebar from './Sidebar';
+import Add from './Add';
+import List from './List';
+import { Container, Row, Col } from 'reactstrap';
+import { BrowserRouter, Route } from 'react-router-dom';
 import firebase, { auth, provider } from './firebase.js';
 
-class App extends Component {
+export default class App extends Component {
   constructor() {
     super();
     this.state = {
@@ -12,17 +16,10 @@ class App extends Component {
       recipes: [],
       user: null
     }
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
   }
 
-  handleChange(e) {
-    this.setState({
-      [e.target.name]: e.target.value
-    });
-  }
 
   login() {
     auth.signInWithPopup(provider)
@@ -84,59 +81,40 @@ class App extends Component {
     });
   }
 
-  removeItem(recipeId) {
-    const recipeRef = firebase.database().ref(`/recipes/${recipeId}`);
-    recipeRef.remove();
-  }
 
   render() {
     return (
-      <div className='app'>
-        <header>
-            <div className='wrapper'>
-              <h1>Brewing Recipes</h1>
-              {this.state.user ?
-                <div>
-                  <div className='user-profile'>
-                     <img src={this.state.user.photoURL} />
-                  </div>
-                  <button onClick={this.logout}>Log Out</button>
+
+      <BrowserRouter>
+        <Container fluid>
+        <Row>
+          <Col>
+            <header>
+                <div className='wrapper'>
+                  <h1>Brewing Recipes</h1>
+                  {this.state.user ?
+                    <div>
+                      <div className='user-profile'>
+                         <img src={this.state.user.photoURL} alt="" />
+                      </div>
+                      <button onClick={this.logout}>Log Out</button>
+                    </div>
+                    :
+                    <button onClick={this.login}>Log In</button>
+                  }
                 </div>
-                :
-                <button onClick={this.login}>Log In</button>
-              }
-            </div>
-        </header>
+            </header>
+          </Col>
+        </Row>
         {this.state.user ?
           <div>
-            <div className='container'>
-              <section className='add-item'>
-                <form onSubmit={this.handleSubmit}>
-                  <input type="text" name="recipeName" placeholder="Name of recipe" onChange={this.handleChange} value={this.state.recipeName} />
-                  <input type="text" name="recipeStyle" placeholder="Style" onChange={this.handleChange} value={this.state.recipeStyle}  />
-                  <input type="text" name="recipeAuthor" placeholder="Author" defaultValue={this.state.user.displayName || this.state.user.email}  />
-                  <button>Add Recipe</button>
-                </form>
-              </section>
-              <section className='display-item'>
-                  <div className="wrapper">
-                    <ul>
-                      {this.state.recipes.map((recipe) => {
-                        return (
-                          <li key={recipe.id}>
-                            <h3>{recipe.recipeName}</h3>
-                            <p>{recipe.recipeStyle}</p>
-                            <p>Author: {recipe.recipeAuthor}
-                               {recipe.recipeAuthor === this.state.user.displayName || recipe.recipeAuthor === this.state.user.email ?
-                                 <button onClick={() => this.removeItem(recipe.id)}>Delete</button> : null}
-                            </p>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                </section>
-            </div>
+            <Row className="full-height">
+              <Col sm="3"><Sidebar /></Col>
+              <Col sm="9">
+              <Route exact path='/' component={List}/>
+              <Route path='/add' component={Add}/>
+              </Col>
+            </Row>
           </div>
           :
           <div className='wrapper'>
@@ -144,8 +122,13 @@ class App extends Component {
           </div>
         }
 
-      </div>
+
+
+        </Container>
+      </BrowserRouter>
+
+
+
     );
   }
 }
-export default App;
